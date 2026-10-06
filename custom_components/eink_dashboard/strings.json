@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add e-ink device",
+        "description": "Start the E-Ink Dashboard app on the e-reader. It shows its IP address and a pairing code.",
+        "data": {
+          "host": "IP address of the device",
+          "code": "Pairing code"
+        }
+      },
+      "pair": {
+        "title": "Pair e-ink device",
+        "description": "Enter the pairing code shown on the device ({host}).",
+        "data": {
+          "code": "Pairing code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach the device. Is the app running and the IP address correct?",
+      "invalid_code": "Wrong pairing code.",
+      "already_paired": "The device is already paired. Unpair it on the device first (hold the status bar for 5 seconds).",
+      "pairing_failed": "The device rejected the pairing: {detail}"
+    },
+    "abort": {
+      "already_configured": "This device is already set up.",
+      "ssl_not_supported": "Home Assistant uses HTTPS directly. Old e-readers only support plain HTTP inside the local network.",
+      "already_paired_elsewhere": "The device is paired with another Home Assistant. Unpair it on the device first."
+    },
+    "flow_title": "{name}"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Display",
+        "data": {
+          "dashboard": "Dashboard"
+        },
+        "data_description": {
+          "dashboard": "Which dashboard the device shows. Tip: create a separate dashboard with a few large buttons."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "full_refresh": {
+        "name": "Refresh display"
+      },
+      "reload_layout": {
+        "name": "Reload dashboard"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "domain": "eink_dashboard",
+  "name": "E-Ink Dashboard",
+  "codeowners": [
+    "@M4X420"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
+  "documentation": "https://github.com/M4X420/eink-dashboard",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/M4X420/eink-dashboard/issues",
+  "requirements": [],
+  "version": "0.1.0",
+  "zeroconf": [
+    "_eink-dashboard._tcp.local."
+  ]
+}

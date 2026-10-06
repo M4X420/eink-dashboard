@@ -1,0 +1,5 @@
+plugins {
+    // AGP 8.5 braucht Gradle 8.7+ und JDK 17 (das in Android Studio mitgelieferte JBR reicht).
+    // Falls AGP mit minSdk 9 Probleme macht: AGP 7.4.2 + Gradle 7.5 als Fallback.
+    id 'com.android.application' version '8.5.2' apply false
+}

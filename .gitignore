@@ -1,0 +1,24 @@
+# Geheimnisse: NIE einchecken
+android/keystore.properties
+*.jks
+*.keystore
+
+# Android / Gradle (wird beim Bauen neu erzeugt)
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+android/.kotlin/
+*.apk
+*.aab
+
+# Python
+__pycache__/
+*.pyc
+
+# Betriebssystem / Editoren
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/

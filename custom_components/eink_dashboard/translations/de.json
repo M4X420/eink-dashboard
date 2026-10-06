@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "E-Ink-Gerät hinzufügen",
+        "description": "Starte die App E-Ink Dashboard auf dem E-Reader. Sie zeigt ihre IP-Adresse und einen Kopplungscode.",
+        "data": {
+          "host": "IP-Adresse des Geräts",
+          "code": "Kopplungscode"
+        }
+      },
+      "pair": {
+        "title": "E-Ink-Gerät koppeln",
+        "description": "Gib den Kopplungscode ein, den das Gerät ({host}) anzeigt.",
+        "data": {
+          "code": "Kopplungscode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Gerät nicht erreichbar. Läuft die App und stimmt die IP-Adresse?",
+      "invalid_code": "Falscher Kopplungscode.",
+      "already_paired": "Das Gerät ist schon gekoppelt. Hebe die Kopplung zuerst am Gerät auf (Statuszeile 5 Sekunden gedrückt halten).",
+      "pairing_failed": "Das Gerät hat die Kopplung abgelehnt: {detail}"
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits eingerichtet.",
+      "ssl_not_supported": "Home Assistant nutzt direkt HTTPS. Alte E-Reader können nur unverschlüsseltes HTTP im lokalen Netz.",
+      "already_paired_elsewhere": "Das Gerät ist mit einem anderen Home Assistant gekoppelt. Hebe die Kopplung zuerst am Gerät auf."
+    },
+    "flow_title": "{name}"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Anzeige",
+        "data": {
+          "dashboard": "Dashboard"
+        },
+        "data_description": {
+          "dashboard": "Welches Dashboard das Gerät anzeigt. Tipp: ein eigenes Dashboard mit wenigen großen Buttons anlegen."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "full_refresh": {
+        "name": "Display neu aufbauen"
+      },
+      "reload_layout": {
+        "name": "Dashboard neu laden"
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Zeilenenden im Repository einheitlich (LF); Windows-Skripte mit CRLF
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary

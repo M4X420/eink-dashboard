@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Release-Signatur: android/keystore.properties (NIE einchecken, steht in .gitignore):
+//   storeFile=C:/Pfad/zu/eink-dashboard-release.jks
+//   storePassword=...
+//   keyAlias=eink-dashboard
+//   keyPassword=...
+// Fehlt die Datei, entsteht nur ein unsigniertes Release-APK; Debug-Builds gehen immer.
+def keystoreFile = rootProject.file('keystore.properties')
+def keystore = new Properties()
+if (keystoreFile.exists()) {
+    keystoreFile.withInputStream { keystore.load(it) }
+}
+
+android {
+    namespace 'io.github.m4x420.einkdashboard'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'io.github.m4x420.einkdashboard'
+        minSdk 9        // Android 2.3.0+ – laeuft damit auf Gingerbread UND ICS
+        targetSdk 10    // bewusst alt: keine modernen Verhaltensaenderungen, kein HW-Accel-Default auf ICS
+        // Bei jedem Release beide erhoehen, passend zur Version in custom_components/.../manifest.json
+        versionCode 1
+        versionName '0.1.0'
+    }
+
+    compileOptions {
+        // Java-8-SPRACHE ist ok (D8 desugart Lambdas fuer jedes minSdk),
+        // Java-8-APIs (Streams, java.time, Optional, String.join ...) gibt es auf dem Geraet NICHT.
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        checkReleaseBuilds false
+        disable 'ExpiredTargetSdkVersion', 'OldTargetApi'
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile file(keystore['storeFile'])
+                storePassword keystore['storePassword']
+                keyAlias keystore['keyAlias']
+                keyPassword keystore['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystoreFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+    // Hinweis: Bei minSdk < 24 signiert AGP automatisch auch mit v1 (JAR) – das braucht Android 2.3.
+}
+
+// Absichtlich KEINE dependencies: kein AndroidX, keine Support-Lib, kein OkHttp.
