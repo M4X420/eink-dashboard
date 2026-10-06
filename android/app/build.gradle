@@ -11,7 +11,8 @@ plugins {
 def keystoreFile = rootProject.file('keystore.properties')
 def keystore = new Properties()
 if (keystoreFile.exists()) {
-    keystoreFile.withInputStream { keystore.load(it) }
+    // Als UTF-8 lesen: Properties.load(InputStream) waere ISO-8859-1 und wuerde z.B. "€" verfaelschen.
+    keystoreFile.withReader('UTF-8') { keystore.load(it) }
 }
 
 android {
