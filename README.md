@@ -29,9 +29,26 @@ Developed and tested on a **tolino shine (1st generation, 2013, Android 2.3.4)**
 
 | | |
 |---|---|
-| E-reader | Android 2.3 (API 9) or newer with Wi-Fi. Tested: tolino shine 1. Root is needed only for kiosk mode. |
+| E-reader | Android 2.3 (API 9) or newer with Wi-Fi, **rooted, with ADB access**. Tested: tolino shine 1. |
 | Home Assistant | 2025.2 or newer |
 | Network | The device must reach Home Assistant via **plain HTTP in your LAN**, e.g. `http://192.168.1.10:8123`. Old Android cannot do modern TLS. A reverse proxy for external HTTPS access is fine, as long as port 8123 is reachable via HTTP inside the LAN. |
+
+### Root is required
+
+The app itself would run without root, but **on a tolino you cannot install it without rooting first**.
+The stock firmware hides the Android settings, so USB debugging (ADB) cannot be switched on, and there is
+no other way to install an APK. When the tolino is connected via USB, it only shows up as a storage
+device and `adb devices` stays empty. Kiosk mode also needs root.
+
+How to root a tolino shine (German guide, links to the original technical write-ups):
+[allesebook.de: Anleitung: Tolino Shine Root Zugriff inkl. Google Play](http://allesebook.de/firmware-software-updates/anleitung-tolino-shine-root-zugriff-inkl-google-play-32350/).
+Overview and more links: [MobileRead Wiki: Tolino Shine](https://wiki.mobileread.com/wiki/Tolino_Shine).
+
+> ⚠️ Depending on the firmware, rooting can require **opening the device and modifying its internal
+> microSD card**. That was the case for the author's tolino shine 1 with firmware 10.5.0. Back up the
+> complete internal card before changing anything. Rooting may void the warranty and can brick the device.
+
+When `adb devices` lists the e-reader, you are ready for the installation.
 
 ## Installation
 
@@ -49,7 +66,7 @@ Download `eink-dashboard-<version>.apk` from the [latest release](https://github
 and install it, for example with [ADB](https://developer.android.com/tools/adb):
 
 ```bash
-adb install eink-dashboard-0.1.0.apk
+adb install eink-dashboard-0.2.0.apk
 adb shell am start -n io.github.m4x420.einkdashboard/.DashboardActivity
 ```
 
@@ -143,8 +160,8 @@ For a signed release build, create `android/keystore.properties` (see the commen
 
 ## Disclaimer
 
-Not affiliated with tolino, Rakuten Kobo, Deutsche Telekom or Home Assistant. Kiosk mode uses root to
-disable system components. Use at your own risk.
+Not affiliated with tolino, Rakuten Kobo, Deutsche Telekom or Home Assistant. Using this project requires
+rooting the e-reader, and kiosk mode uses root to disable system components. Use at your own risk.
 
 ## License
 
@@ -157,6 +174,13 @@ disable system components. Use at your own risk.
 **E-Ink Dashboard** macht aus einem alten E-Reader, zum Beispiel einem **tolino shine**, ein
 interaktives Bedienfeld für Home Assistant. Die App zeigt große Kacheln, die sich live aktualisieren.
 Ein Tipp schaltet Licht, Schalter, Skripte usw.
+
+**Voraussetzung: gerooteter tolino mit ADB.** Ohne Root lässt sich die App auf einem tolino nicht
+installieren, weil die Telekom-Firmware die Android-Einstellungen ausblendet und USB-Debugging deshalb
+nicht eingeschaltet werden kann. Der tolino erscheint am PC dann nur als USB-Speicher. Anleitung:
+[allesebook.de: Tolino Shine Root Zugriff](http://allesebook.de/firmware-software-updates/anleitung-tolino-shine-root-zugriff-inkl-google-play-32350/).
+Je nach Firmware muss man dafür das Gerät **öffnen und die interne microSD-Karte bearbeiten** (beim
+tolino shine 1 mit Firmware 10.5.0 war das nötig). Vorher unbedingt die komplette Karte sichern.
 
 **Kurzanleitung:**
 
