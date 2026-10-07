@@ -40,7 +40,8 @@ final class HaLive implements WsClient.Listener {
         /** Neues Layout. error != null (z.B. "no_dashboard") -> tiles ist leer. */
         void onLayout(Tile[] tiles, int columns, String error);
 
-        void onLiveStatus(String text);
+        /** key: L10n-Schluessel, z.B. "status_live"; args fuer die Platzhalter. */
+        void onLiveStatus(String key, Object... args);
 
         /** HA hat den Token abgelehnt (z.B. Integration in HA geloescht): Kopplung ist hinfaellig. */
         void onAuthInvalid();
@@ -110,7 +111,7 @@ final class HaLive implements WsClient.Listener {
 
     private void connect() {
         ready = false;
-        status("Verbinde...");
+        status("status_connecting");
         ws = new WsClient(host, port, "/api/websocket", this);
         ws.connect();
     }
@@ -148,7 +149,7 @@ final class HaLive implements WsClient.Listener {
                     backoffMs = MIN_BACKOFF_MS;
                     callback.onConnected();
                 });
-                status("Live");
+                status("status_live");
             } else if ("auth_invalid".equals(type)) {
                 // NICHT endlos neu versuchen: HA bannt sonst ggf. die IP (ip_ban_enabled).
                 ui.post(() -> {
@@ -170,7 +171,7 @@ final class HaLive implements WsClient.Listener {
                 }
             }
         } catch (Exception e) {
-            status("Protokollfehler: " + e.getMessage());
+            status("status_protocol_error", String.valueOf(e.getMessage()));
         }
     }
 
@@ -279,7 +280,7 @@ final class HaLive implements WsClient.Listener {
             long delay = backoffMs;
             backoffMs = Math.min(backoffMs * 2, MAX_BACKOFF_MS);
             String why = cause != null ? cause.getMessage() : "getrennt";
-            callback.onLiveStatus("Offline (" + why + "), neu in " + delay / 1000 + "s");
+            callback.onLiveStatus("status_offline", why, (int) (delay / 1000));
             waitingForReconnect = true;
             ui.postDelayed(reconnect, delay);
         });
@@ -289,7 +290,7 @@ final class HaLive implements WsClient.Listener {
         ui.post(() -> callback.onLiveState(s));
     }
 
-    private void status(String text) {
-        ui.post(() -> callback.onLiveStatus(text));
+    private void status(String key, Object... args) {
+        ui.post(() -> callback.onLiveStatus(key, args));
     }
 }

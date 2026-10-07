@@ -18,6 +18,9 @@ Developed and tested on a **tolino shine (1st generation, 2013, Android 2.3.4)**
 - **Configured in Home Assistant:** pick any dashboard; edit and save it, and the device updates immediately.
 - **Easy pairing:** Home Assistant discovers the device (zeroconf). Enter the code shown on the display and you're done. No tokens to type.
 - **Device in Home Assistant:** battery, charging, Wi-Fi signal and connectivity sensors; buttons for *Refresh display* and *Reload dashboard*.
+- **Pages:** if not all tiles fit on the screen (about 8 per page with 2 columns), two arrow buttons at the bottom switch pages.
+- **Battery level** of the e-reader in the top right corner.
+- **German and English:** switch the language in the device menu (hold the status line for 5 seconds).
 - **Made for e-ink:** black/white tiles, batched redraws, a real hardware full refresh (GC16) against ghosting on Freescale i.MX devices, and a fallback flash on others.
 - **Kiosk mode (root):** the app replaces the stock home screen and starts on boot.
 - **Tiny:** no dependencies, around 50 KB APK, runs on 256 MB RAM.
@@ -89,7 +92,8 @@ views:
 
 **Supported cards:** `button`, `tile`, `entity`, rows of `entities` cards, and any card with an
 `entity`. These can be nested in `grid`, `vertical-stack` and `horizontal-stack`, and the *sections*
-view layout works too. Only the first view is used, with up to 12 tiles.
+view layout works too. Only the first view is used, with up to 48 tiles; they are split into pages
+when they don't fit on the screen.
 
 **Tap actions:**
 
@@ -165,6 +169,10 @@ Ein Tipp schaltet Licht, Schalter, Skripte usw.
 4. Ein eigenes Dashboard mit wenigen Buttons/Kacheln anlegen und unter *E-Ink Dashboard → Konfigurieren*
    auswählen.
 5. Optional: Statuszeile 5 Sekunden gedrückt halten → „Als Startbildschirm einrichten (Root)“.
+   Im selben Menü lässt sich die Sprache zwischen Deutsch und Englisch umschalten.
+
+Passen nicht alle Kacheln auf den Bildschirm, blättert man mit den Pfeiltasten unten. Oben rechts
+steht der Akkustand des E-Readers.
 
 **Wichtig:** Der E-Reader braucht im Heimnetz Zugriff auf Home Assistant per **HTTP**
 (z.B. `http://192.168.2.10:8123`), weil alte Android-Versionen kein modernes HTTPS können.

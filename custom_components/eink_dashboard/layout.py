@@ -17,7 +17,8 @@ from .const import CONF_DASHBOARD
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_TILES = 12
+# Mehr passen nicht auf eine Seite, das Geraet blaettert dann (z.B. 8 Kacheln je Seite).
+MAX_TILES = 48
 DEFAULT_COLUMNS = 2
 MAX_COLUMNS = 4
 

@@ -44,28 +44,28 @@ final class PairingView extends View {
 
         text.setTypeface(Typeface.DEFAULT_BOLD);
         text.setTextSize(46);
-        c.drawText("E-Ink Dashboard", x, y, text);
+        c.drawText(L10n.t("pair_title"), x, y, text);
         text.setTypeface(Typeface.DEFAULT);
         text.setTextSize(30);
-        c.drawText("einrichten", x, y += 48, text);
+        c.drawText(L10n.t("pair_subtitle"), x, y += 48, text);
 
         c.drawLine(60, y += 50, getWidth() - 60, y, line);
 
         text.setTextSize(28);
-        c.drawText("Home Assistant meldet das Geraet", x, y += 70, text);
-        c.drawText("automatisch als neu gefunden. Sonst:", x, y += 42, text);
-        c.drawText("Einstellungen > Geraete & Dienste >", x, y += 42, text);
-        c.drawText("Integration hinzufuegen > \"E-Ink Dashboard\"", x, y += 42, text);
+        c.drawText(L10n.t("pair_hint1"), x, y += 70, text);
+        c.drawText(L10n.t("pair_hint2"), x, y += 42, text);
+        c.drawText(L10n.t("pair_hint3"), x, y += 42, text);
+        c.drawText(L10n.t("pair_hint4"), x, y += 42, text);
 
         text.setTextSize(30);
-        c.drawText("IP-Adresse", x, y += 100, text);
+        c.drawText(L10n.t("pair_ip"), x, y += 100, text);
         text.setTypeface(Typeface.DEFAULT_BOLD);
         text.setTextSize(64);
         c.drawText(ip, x, y += 80, text);
 
         text.setTypeface(Typeface.DEFAULT);
         text.setTextSize(30);
-        c.drawText("Kopplungscode", x, y += 100, text);
+        c.drawText(L10n.t("pair_code"), x, y += 100, text);
         text.setTypeface(Typeface.DEFAULT_BOLD);
         text.setTextSize(96);
         c.drawText(code, x, y += 110, text);

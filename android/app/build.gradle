@@ -24,8 +24,8 @@ android {
         minSdk 9        // Android 2.3.0+ – laeuft damit auf Gingerbread UND ICS
         targetSdk 10    // bewusst alt: keine modernen Verhaltensaenderungen, kein HW-Accel-Default auf ICS
         // Bei jedem Release beide erhoehen, passend zur Version in custom_components/.../manifest.json
-        versionCode 1
-        versionName '0.1.0'
+        versionCode 2
+        versionName '0.2.0'
     }
 
     compileOptions {

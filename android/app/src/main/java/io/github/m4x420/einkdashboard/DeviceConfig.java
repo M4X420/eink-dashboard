@@ -21,6 +21,7 @@ final class DeviceConfig {
     private String token;
     private String pairingCode;
     private String deviceId;
+    private String language;
 
     private DeviceConfig(SharedPreferences prefs) {
         this.prefs = prefs;
@@ -33,6 +34,7 @@ final class DeviceConfig {
         c.token = c.prefs.getString("token", null);
         c.pairingCode = c.prefs.getString("pairing_code", null);
         c.deviceId = c.prefs.getString("device_id", null);
+        c.language = c.prefs.getString("language", L10n.systemDefault());
         if (c.deviceId == null) c.deviceId = UUID.randomUUID().toString().replace("-", "");
         if (c.pairingCode == null) c.pairingCode = newPairingCode();
         c.save();
@@ -67,6 +69,15 @@ final class DeviceConfig {
         return deviceId;
     }
 
+    synchronized String language() {
+        return language;
+    }
+
+    synchronized void setLanguage(String language) {
+        this.language = language;
+        save();
+    }
+
     synchronized void pair(String host, int port, String token) {
         this.host = host;
         this.port = port;
@@ -96,6 +107,7 @@ final class DeviceConfig {
                 .putString("token", token)
                 .putString("pairing_code", pairingCode)
                 .putString("device_id", deviceId)
+                .putString("language", language)
                 .commit();
     }
 

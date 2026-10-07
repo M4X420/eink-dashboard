@@ -42,11 +42,6 @@ public class DashboardActivity extends Activity
     private static final String TAG = "eink-dashboard";
     private static final long PENDING_TIMEOUT_MS = 10000;
     private static final long REPORT_INTERVAL_MS = 5 * 60 * 1000;
-    private static final String MENU_KIOSK_ON = "Als Startbildschirm einrichten (Root)";
-    private static final String MENU_KIOSK_OFF = "Original-Startbildschirm wiederherstellen";
-    private static final String MENU_UNPAIR = "Kopplung aufheben";
-    private static final String MENU_SETTINGS = "Android-Einstellungen";
-    private static final String MENU_CANCEL = "Abbrechen";
 
     private final Handler ui = new Handler();
     private final ExecutorService net = Executors.newSingleThreadExecutor();
@@ -68,7 +63,14 @@ public class DashboardActivity extends Activity
     private Tile[] tiles = new Tile[0];
     /** Letzter bekannter Zustand je Entity, damit ein neues Layout nicht leer startet. */
     private final Map<String, EntityState> states = new HashMap<>();
-    private String connStatus = "";
+    /** Verbindungsstatus als L10n-Schluessel + Argumente, damit er beim Sprachwechsel mitwechselt. */
+    private String connStatusKey = "status_start";
+    private Object[] connStatusArgs = new Object[0];
+    /** Fuer den Neuaufbau nach Sprachwechsel: letztes Layout. */
+    private int columns = 2;
+    private String layoutError;
+    private boolean layoutLoaded;
+    private int page;
     private int redrawsSinceFlash;
 
     // Nur im ungekoppelten Modus gesetzt
@@ -94,6 +96,7 @@ public class DashboardActivity extends Activity
         Log.i(TAG, "Andere Startbildschirme: " + launchers + ", Kiosk aktiv: " + Kiosk.isActive(this, launchers));
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         config = DeviceConfig.load(this);
+        L10n.set(config.language());
         pairingServer = new PairingServer(Config.PAIRING_PORT, config, deviceInfo(dm), this);
         pairingServer.start();
         mdns = new MdnsResponder(wifi, config, Config.PAIRING_PORT, Build.MODEL, appVersion);
@@ -148,8 +151,10 @@ public class DashboardActivity extends Activity
             rest = new HaClient(config.baseUrl(), config.token());
             live = new HaLive(config.host(), config.port(), config.token(), this);
             states.clear();
-            showDashboard(new Tile[0], 2, "Lade Dashboard ...");
-            setConnStatus("Start");
+            layoutLoaded = false;
+            page = 0;
+            showDashboard(new Tile[0], 2);
+            setConnStatus("status_start");
             if (resumed) startConnection();
         } else {
             rest = null;
@@ -170,22 +175,37 @@ public class DashboardActivity extends Activity
         if (live != null) live.stop();
     }
 
-    private void showDashboard(Tile[] newTiles, int columns, String message) {
+    private void showDashboard(Tile[] newTiles, int newColumns) {
         tiles = newTiles;
-        view = new DashboardView(this, newTiles, columns, message);
+        columns = newColumns;
+        String message = layoutLoaded ? layoutMessage(layoutError) : L10n.t("layout_loading");
+        view = new DashboardView(this, newTiles, newColumns, message, page);
         view.setListener(this);
         for (int i = 0; i < newTiles.length; i++) {
             EntityState s = states.get(newTiles[i].entityId);
             if (s != null) view.setState(i, s);
         }
-        view.setStatus(diag + "   |   " + connStatus);
+        view.setBattery(batteryPercent, charging);
+        view.setStatus(statusLine());
         setContentView(view);
+    }
+
+    /** Nach Sprachwechsel: alles mit den neuen Texten neu aufbauen, Verbindung bleibt bestehen. */
+    private void rerender() {
+        if (view != null) {
+            page = view.getPage();
+            showDashboard(tiles, columns);
+        } else {
+            updatePairingView();
+        }
+        ui.removeCallbacks(fullRefresh);
+        ui.postDelayed(fullRefresh, 500);
     }
 
     private void updatePairingView() {
         if (pairingView == null) return;
         String ip = wifiIp();
-        pairingView.setInfo(ip != null ? ip : "Kein WLAN", config.pairingCode(), diag);
+        pairingView.setInfo(ip != null ? ip : L10n.t("pair_no_wifi"), config.pairingCode(), diag);
     }
 
     private String wifiIp() {
@@ -245,6 +265,7 @@ public class DashboardActivity extends Activity
             if (percent == batteryPercent && plugged == charging) return;
             batteryPercent = percent;
             charging = plugged;
+            if (view != null && view.setBattery(percent, plugged)) view.invalidateHeader();
             sendReport();
         }
     };
@@ -296,44 +317,54 @@ public class DashboardActivity extends Activity
     public void onExitGesture() {
         Log.i(TAG, "Notausgang");
         List<ComponentName> launchers = Kiosk.otherLaunchers(this);
-        List<String> list = new ArrayList<>();
-        if (config.isPaired()) list.add(MENU_UNPAIR);
-        if (!launchers.isEmpty()) list.add(Kiosk.isActive(this, launchers) ? MENU_KIOSK_OFF : MENU_KIOSK_ON);
-        list.add(MENU_SETTINGS);
-        list.add(MENU_CANCEL);
-        String[] items = list.toArray(new String[list.size()]);
+        // Schluessel statt Texten, damit der Vergleich unabhaengig von der Sprache ist.
+        List<String> keys = new ArrayList<>();
+        if (config.isPaired()) keys.add("menu_unpair");
+        if (!launchers.isEmpty()) keys.add(Kiosk.isActive(this, launchers) ? "menu_kiosk_off" : "menu_kiosk_on");
+        keys.add("menu_language");
+        keys.add("menu_settings");
+        keys.add("menu_cancel");
+        String[] items = new String[keys.size()];
+        for (int i = 0; i < items.length; i++) items[i] = L10n.t(keys.get(i));
         new AlertDialog.Builder(this)
-                .setTitle("E-Ink Dashboard")
+                .setTitle(L10n.t("menu_title"))
                 .setItems(items, (dialog, which) -> {
-                    String choice = items[which];
-                    if (MENU_UNPAIR.equals(choice)) confirmUnpair();
-                    else if (MENU_KIOSK_ON.equals(choice)) setKiosk(launchers, true);
-                    else if (MENU_KIOSK_OFF.equals(choice)) setKiosk(launchers, false);
-                    else if (MENU_SETTINGS.equals(choice)) startActivity(new Intent(Settings.ACTION_SETTINGS));
+                    String choice = keys.get(which);
+                    if ("menu_unpair".equals(choice)) confirmUnpair();
+                    else if ("menu_kiosk_on".equals(choice)) setKiosk(launchers, true);
+                    else if ("menu_kiosk_off".equals(choice)) setKiosk(launchers, false);
+                    else if ("menu_language".equals(choice)) switchLanguage();
+                    else if ("menu_settings".equals(choice)) startActivity(new Intent(Settings.ACTION_SETTINGS));
                 })
                 .show();
     }
 
+    private void switchLanguage() {
+        String next = L10n.other();
+        Log.i(TAG, "Sprache: " + next);
+        config.setLanguage(next);
+        L10n.set(next);
+        rerender();
+    }
+
     /** Laeuft im Hintergrund: su fragt ggf. auf dem Display nach, pm braucht einige Sekunden. */
     private void setKiosk(List<ComponentName> launchers, boolean on) {
-        Toast.makeText(this, "Bitte warten, ggf. Superuser-Anfrage bestaetigen ...", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, L10n.t("kiosk_wait"), Toast.LENGTH_LONG).show();
         new Thread(() -> {
             boolean ok = Kiosk.setOthersEnabled(this, launchers, !on);
-            String text = !ok ? "Fehlgeschlagen - ist das Geraet gerootet?"
-                    : on ? "Kiosk aktiv: diese App ist jetzt der Startbildschirm."
-                    : "Original-Startbildschirm wiederhergestellt.";
+            String text = L10n.t(!ok ? "kiosk_failed" : on ? "kiosk_on_ok" : "kiosk_off_ok");
             ui.post(() -> Toast.makeText(this, text, Toast.LENGTH_LONG).show());
         }, "kiosk").start();
     }
 
     private void confirmUnpair() {
         new AlertDialog.Builder(this)
-                .setMessage("Verbindung zu Home Assistant wirklich trennen? Danach muss das Geraet neu gekoppelt werden.")
-                .setPositiveButton("Trennen", (dialog, which) -> {
+                .setMessage(L10n.t("unpair_confirm"))
+                .setPositiveButton(L10n.t("unpair_button"), (dialog, which) -> {
                     config.unpair();
                     onPairingChanged();
                 })
-                .setNegativeButton(MENU_CANCEL, null)
+                .setNegativeButton(L10n.t("menu_cancel"), null)
                 .show();
     }
 
@@ -368,7 +399,7 @@ public class DashboardActivity extends Activity
                 ui.post(() -> {
                     v.setPending(index, false);
                     v.invalidateTile(index);
-                    setConnStatus("Fehler: " + e.getMessage());
+                    setConnStatus("status_error", String.valueOf(e.getMessage()));
                 });
             }
         });
@@ -385,35 +416,38 @@ public class DashboardActivity extends Activity
     public void onLayout(Tile[] newTiles, int columns, String error) {
         Log.i(TAG, "Layout: " + newTiles.length + " Kacheln, " + columns + " Spalten"
                 + (error != null ? ", Fehler " + error : ""));
-        showDashboard(newTiles, columns, layoutMessage(error));
+        layoutLoaded = true;
+        layoutError = error;
+        if (view != null) page = view.getPage(); // gleiche Seite behalten, wenn das Dashboard bearbeitet wurde
+        showDashboard(newTiles, columns);
         redrawsSinceFlash = 0;
         ui.removeCallbacks(fullRefresh);
         ui.postDelayed(fullRefresh, 800); // neuer Bildaufbau -> einmal sauber
     }
 
     private static String layoutMessage(String error) {
-        if (error == null) return "Das Dashboard ist leer.";
+        if (error == null) return L10n.t("layout_empty");
         switch (error) {
             case "no_dashboard":
-                return "Kein Dashboard ausgewählt.\n\nIn Home Assistant:\nGeräte & Dienste > E-Ink Dashboard\n> Konfigurieren";
             case "dashboard_not_found":
-                return "Das gewählte Dashboard\nwurde nicht gefunden.";
             case "unsupported_dashboard":
-                return "Das Dashboard wird automatisch\nerzeugt. Bitte ein eigenes\nDashboard mit Karten anlegen.";
             case "no_tiles":
-                return "Das Dashboard enthält keine\nKarten mit Entities.";
             case "integration_missing":
-                return "Die Integration E-Ink Dashboard\nfehlt in Home Assistant.";
             case "not_paired":
-                return "Home Assistant kennt dieses Gerät\nnicht mehr. Bitte neu koppeln.";
+                return L10n.t("layout_" + error);
             default:
-                return "Fehler beim Laden des Dashboards:\n" + error;
+                return L10n.t("layout_error", error);
         }
     }
 
     @Override
-    public void onLiveStatus(String text) {
-        setConnStatus(text);
+    public void onPageChanged(int newPage) {
+        page = newPage;
+    }
+
+    @Override
+    public void onLiveStatus(String key, Object... args) {
+        setConnStatus(key, args);
     }
 
     @Override
@@ -450,11 +484,16 @@ public class DashboardActivity extends Activity
         ui.postDelayed(redraw, Config.REDRAW_DEBOUNCE_MS);
     }
 
-    private void setConnStatus(String s) {
-        connStatus = s;
-        if (view != null && view.setStatus(diag + "   |   " + s)) {
-            Log.i(TAG, "Status: " + s);
+    private void setConnStatus(String key, Object... args) {
+        connStatusKey = key;
+        connStatusArgs = args;
+        if (view != null && view.setStatus(statusLine())) {
+            Log.i(TAG, "Status: " + L10n.t(key, args));
             view.invalidateStatus();
         }
+    }
+
+    private String statusLine() {
+        return diag + "   |   " + L10n.t(connStatusKey, connStatusArgs);
     }
 }
